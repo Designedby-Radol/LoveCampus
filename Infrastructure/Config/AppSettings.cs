@@ -12,12 +12,5 @@ public static class AppSettings
     }
 
     public static string ConnectionString => 
-        _configuration?.GetConnectionString("DefaultConnection") 
-        ?? throw new InvalidOperationException("La cadena de conexión no está configurada.");
-
-    public static string GetValue(string key)
-    {
-        return _configuration?[key] 
-            ?? throw new InvalidOperationException($"La configuración '{key}' no está definida.");
-    }
+        "Server=localhost;Database=campus_love;User=root;Password=11358;Port=5506;";
 } 

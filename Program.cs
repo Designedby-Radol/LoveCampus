@@ -1,37 +1,23 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.EnvironmentVariables;
-using Serilog;
-using Serilog.Configuration;
-using LoveCampus.Infrastructure.Config;
+﻿using LoveCampus.Application.UI;
 
-var configuration = new ConfigurationBuilder()
-    .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", optional: true)
-    .AddEnvironmentVariables()
-    .Build();
-
-// Configurar Serilog
-Log.Logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(configuration)
-    .CreateLogger();
-
-try
+namespace LoveCampus
 {
-    Log.Information("Iniciando la aplicación...");
-    
-    // Inicializar configuración
-    AppSettings.Initialize(configuration);
-    
-    // Aquí irá la lógica principal de la aplicación
-    
-    Log.Information("Aplicación iniciada correctamente");
-}
-catch (Exception ex)
-{
-    Log.Fatal(ex, "La aplicación terminó inesperadamente");
-}
-finally
-{
-    Log.CloseAndFlush();
+    class Program
+    {
+        static async Task Main(string[] args) // Cambiar a async Task Main
+        {
+            try
+            {
+                var ui = new ConsolaUI();
+                await ui.MostrarMenuPrincipal(); // Llamar al método correcto
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Error fatal en la aplicación: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+                Console.ResetColor();
+            }
+        }
+    }
 }
