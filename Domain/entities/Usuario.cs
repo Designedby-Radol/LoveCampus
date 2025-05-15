@@ -8,7 +8,7 @@ public class Usuario
     public int GeneroId { get; set; }
     public int CarreraId { get; set; }
     public string Email { get; set; } = string.Empty;
-    public string PasswordHash { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
     public string? FrasePerfil { get; set; }
     public int CreditosDisponibles { get; set; }
     public DateTime FechaRegistro { get; set; }
@@ -18,4 +18,5 @@ public class Usuario
     public string? GeneroDescripcion { get; set; }
     public string? CarreraNombre { get; set; }
     public List<string>? Intereses { get; set; }
-} 
+    public string? Rol { get; set; }
+}
