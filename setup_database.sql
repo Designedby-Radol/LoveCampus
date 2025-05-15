@@ -32,6 +32,7 @@ CREATE TABLE usuarios (
     password VARCHAR(50) NOT NULL,
     frase_perfil TEXT,
     creditos_disponibles INT DEFAULT 5,
+    capcoins INT DEFAULT 0,
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     ultimo_acceso TIMESTAMP NULL,
     rol ENUM('usuario', 'admin') NOT NULL DEFAULT 'usuario',
@@ -60,54 +61,44 @@ CREATE TABLE log_interacciones (
 
 -- Relación muchos a muchos entre usuarios e intereses
 CREATE TABLE usuario_intereses (
-    usuario_id INT,
-    interes_id INT,
+    usuario_id INT NOT NULL,
+    interes_id INT NOT NULL,
     PRIMARY KEY (usuario_id, interes_id),
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
-    FOREIGN KEY (interes_id) REFERENCES intereses(id) ON DELETE CASCADE
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
+    FOREIGN KEY (interes_id) REFERENCES intereses(id)
 );
 
--- Tabla de interacciones (like/dislike)
-CREATE TABLE interacciones (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    usuario_origen_id INT NOT NULL,
-    usuario_destino_id INT NOT NULL,
-    tipo ENUM('like', 'dislike') NOT NULL,
-    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (usuario_origen_id) REFERENCES usuarios(id),
-    FOREIGN KEY (usuario_destino_id) REFERENCES usuarios(id)
-);
-
--- Tabla de matches confirmados
+-- Tabla de matches
 CREATE TABLE matches (
     id INT PRIMARY KEY AUTO_INCREMENT,
     usuario1_id INT NOT NULL,
     usuario2_id INT NOT NULL,
     fecha_match TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    puntuacion_compatibilidad DECIMAL(5,2),
     FOREIGN KEY (usuario1_id) REFERENCES usuarios(id),
     FOREIGN KEY (usuario2_id) REFERENCES usuarios(id)
 );
 
--- Tabla de factores y sus pesos
-CREATE TABLE pesos_emparejamiento (
+-- Tabla de tienda (para compras con capcoins)
+CREATE TABLE tienda (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    factor VARCHAR(50) NOT NULL UNIQUE,
-    peso DECIMAL(3,2) NOT NULL CHECK (peso >= 0 AND peso <= 1)
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    precio_capcoins INT NOT NULL,
+    tipo ENUM('token', 'like') NOT NULL,
+    cantidad INT NOT NULL
 );
 
 -- Crear índices para mejorar el rendimiento
 CREATE INDEX idx_usuarios_email ON usuarios(email);
 CREATE INDEX idx_usuarios_ultimo_acceso ON usuarios(ultimo_acceso);
-CREATE INDEX idx_interacciones_usuarios ON interacciones(usuario_origen_id, usuario_destino_id);
 CREATE INDEX idx_matches_usuarios ON matches(usuario1_id, usuario2_id);
 
--- Insertar datos de prueba
+-- Insertar datos iniciales
+INSERT INTO generos (descripcion) VALUES 
+('Masculino'),
+('Femenino');
 
--- Géneros
-INSERT INTO generos (descripcion) VALUES ('Masculino'), ('Femenino'), ('Otro');
-
--- Carreras
+-- Insertar algunas carreras
 INSERT INTO carreras (nombre) VALUES 
 ('Ingeniería en Sistemas'),
 ('Psicología'),
@@ -116,7 +107,7 @@ INSERT INTO carreras (nombre) VALUES
 ('Medicina'),
 ('Arquitectura');
 
--- Intereses
+-- Insertar algunos intereses
 INSERT INTO intereses (nombre) VALUES 
 ('Deportes'),
 ('Música'),
@@ -125,20 +116,9 @@ INSERT INTO intereses (nombre) VALUES
 ('Cine'),
 ('Tecnología');
 
--- Usuarios
-INSERT INTO usuarios (nombre, edad, genero_id, carrera_id, email, password, frase_perfil, creditos_disponibles, rol)
-VALUES
-('Juan', 22, 1, 1, 'juan@mail.com', '1234', 'Amante de la tecnología y el fútbol', 5, 'usuario'),
-('Ana', 21, 2, 2, 'ana@mail.com', 'abcd', 'Me encanta leer y viajar', 5, 'usuario'),
-('Carlos', 23, 1, 3, 'carlos@mail.com', 'pass', 'Apasionado por la música', 5, 'usuario'),
-('Lucía', 20, 2, 4, 'lucia@mail.com', 'lucia', 'Fan del cine y la arquitectura', 5, 'usuario'),
-('Admin', 30, 1, 1, 'admin@mail.com', 'admin', 'Administrador del sistema', 5, 'admin');
-
--- Usuario_intereses
-INSERT INTO usuario_intereses (usuario_id, interes_id) VALUES
-(1, 1), (1, 6),
-(2, 3), (2, 4),
-(3, 2), (3, 6),
-(4, 5), (4, 6);
-
--- Puedes agregar más datos de prueba según lo necesites
+-- Insertar algunos productos en la tienda
+INSERT INTO tienda (nombre, descripcion, precio_capcoins, tipo, cantidad) VALUES
+('Paquete de 5 Tokens', '5 tokens para ver perfiles', 100, 'token', 5),
+('Paquete de 10 Tokens', '10 tokens para ver perfiles', 180, 'token', 10),
+('Paquete de 5 Likes', '5 likes adicionales', 50, 'like', 5),
+('Paquete de 10 Likes', '10 likes adicionales', 90, 'like', 10);

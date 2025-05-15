@@ -14,8 +14,8 @@ public class UsuarioRepository : Repository<Usuario>, IUsuarioRepository
     {
         using var dbContext = new DbContext();
         var sql = @"
-            INSERT INTO usuarios (nombre, edad, genero_id, carrera_id, email, password, frase_perfil, creditos_disponibles)
-            VALUES (@Nombre, @Edad, @GeneroId, @CarreraId, @Email, @Password, @FrasePerfil, @CreditosDisponibles)";
+            INSERT INTO usuarios (nombre, edad, genero_id, carrera_id, email, password, frase_perfil, creditos_disponibles, capcoins)
+            VALUES (@Nombre, @Edad, @GeneroId, @CarreraId, @Email, @Password, @FrasePerfil, @CreditosDisponibles, @Capcoins)";
 
         var affected = dbContext.Connection.Execute(sql, usuario);
         return affected > 0;
@@ -26,17 +26,16 @@ public class UsuarioRepository : Repository<Usuario>, IUsuarioRepository
         using var dbContext = new DbContext();
         var sql = @"
             UPDATE usuarios 
-            SET nombre = @Nombre,
-                edad = @Edad,
-                genero_id = @GeneroId,
-                carrera_id = @CarreraId,
-                email = @Email,
-                password = @Password,
-                frase_perfil = @FrasePerfil,
-                creditos_disponibles = @CreditosDisponibles
+            SET password = @Password,
+                frase_perfil = @FrasePerfil
             WHERE id = @Id";
 
-        var affected = dbContext.Connection.Execute(sql, usuario);
+        var affected = dbContext.Connection.Execute(sql, new
+        {
+            usuario.Id,
+            usuario.Password,
+            usuario.FrasePerfil
+        });
         return affected > 0;
     }
 
@@ -235,5 +234,58 @@ public class UsuarioRepository : Repository<Usuario>, IUsuarioRepository
         using var dbContext = new DbContext();
         var sql = "SELECT id, nombre FROM carreras";
         return dbContext.Connection.Query<Carrera>(sql).ToList();
+    }
+
+    public List<ProductoTienda> ObtenerProductosTienda()
+    {
+        using var dbContext = new DbContext();
+        var sql = "SELECT * FROM tienda ORDER BY precio_capcoins";
+        return dbContext.Connection.Query<ProductoTienda>(sql).ToList();
+    }
+
+    public bool RealizarCompra(int usuarioId, int productoId)
+    {
+        using var dbContext = new DbContext();
+        using var transaction = dbContext.Connection.BeginTransaction();
+
+        try
+        {
+            // Obtener el producto
+            var producto = dbContext.Connection.QueryFirstOrDefault<ProductoTienda>(
+                "SELECT * FROM tienda WHERE id = @ProductoId",
+                new { ProductoId = productoId });
+
+            if (producto == null)
+                return false;
+
+            // Obtener el usuario
+            var usuario = dbContext.Connection.QueryFirstOrDefault<Usuario>(
+                "SELECT * FROM usuarios WHERE id = @UsuarioId",
+                new { UsuarioId = usuarioId });
+
+            if (usuario == null || usuario.Capcoins < producto.PrecioCapcoins)
+                return false;
+
+            // Actualizar capcoins del usuario
+            dbContext.Connection.Execute(
+                "UPDATE usuarios SET capcoins = capcoins - @Precio WHERE id = @UsuarioId",
+                new { Precio = producto.PrecioCapcoins, UsuarioId = usuarioId });
+
+            // Si es un token, actualizar créditos disponibles
+            if (producto.Tipo == "token")
+            {
+                dbContext.Connection.Execute(
+                    "UPDATE usuarios SET creditos_disponibles = creditos_disponibles + @Cantidad WHERE id = @UsuarioId",
+                    new { Cantidad = producto.Cantidad, UsuarioId = usuarioId });
+            }
+
+            transaction.Commit();
+            return true;
+        }
+        catch
+        {
+            transaction.Rollback();
+            return false;
+        }
     }
 }
