@@ -13,4 +13,4 @@ public static class AppSettings
 
     public static string ConnectionString => 
         "Server=localhost;Database=campus_love;User=root;Password=11358;Port=5506;";
-} 
+}

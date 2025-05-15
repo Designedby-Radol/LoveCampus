@@ -14,8 +14,8 @@ public class UsuarioRepository : Repository<Usuario>, IUsuarioRepository
     {
         using var dbContext = new DbContext();
         var sql = @"
-            INSERT INTO usuarios (nombre, edad, genero_id, carrera_id, email, password_hash, frase_perfil, creditos_disponibles)
-            VALUES (@Nombre, @Edad, @GeneroId, @CarreraId, @Email, @PasswordHash, @FrasePerfil, @CreditosDisponibles)";
+            INSERT INTO usuarios (nombre, edad, genero_id, carrera_id, email, password, frase_perfil, creditos_disponibles)
+            VALUES (@Nombre, @Edad, @GeneroId, @CarreraId, @Email, @Password, @FrasePerfil, @CreditosDisponibles)";
 
         var affected = dbContext.Connection.Execute(sql, usuario);
         return affected > 0;
@@ -31,7 +31,7 @@ public class UsuarioRepository : Repository<Usuario>, IUsuarioRepository
                 genero_id = @GeneroId,
                 carrera_id = @CarreraId,
                 email = @Email,
-                password_hash = @PasswordHash,
+                password = @Password,
                 frase_perfil = @FrasePerfil,
                 creditos_disponibles = @CreditosDisponibles
             WHERE id = @Id";
@@ -40,7 +40,7 @@ public class UsuarioRepository : Repository<Usuario>, IUsuarioRepository
         return affected > 0;
     }
 
-    public Usuario? Autenticar(string email, string passwordHash)
+    public Usuario? Autenticar(string nombre, string password)
     {
         using var dbContext = new DbContext();
         var sql = @"
@@ -48,16 +48,21 @@ public class UsuarioRepository : Repository<Usuario>, IUsuarioRepository
             FROM usuarios u
             LEFT JOIN generos g ON u.genero_id = g.id
             LEFT JOIN carreras c ON u.carrera_id = c.id
-            WHERE u.email = @Email AND u.password_hash = @PasswordHash";
+            WHERE u.nombre = @Nombre AND u.password = @Password";
 
-        var usuario = dbContext.Connection.QueryFirstOrDefault<Usuario>(sql, new { Email = email, PasswordHash = passwordHash });
-        
+        var usuario = dbContext.Connection.QueryFirstOrDefault<Usuario>(sql, new { Nombre = nombre, Password = password });
+
         if (usuario != null)
         {
             // Actualizar último acceso
             dbContext.Connection.Execute(
                 "UPDATE usuarios SET ultimo_acceso = CURRENT_TIMESTAMP WHERE id = @Id",
                 new { usuario.Id });
+
+            // Registrar historial de acceso
+            dbContext.Connection.Execute(
+                "INSERT INTO accesos_usuario (usuario_id) VALUES (@UsuarioId)",
+                new { UsuarioId = usuario.Id });
         }
 
         return usuario;
@@ -74,6 +79,18 @@ public class UsuarioRepository : Repository<Usuario>, IUsuarioRepository
             WHERE u.email = @Email";
 
         return dbContext.Connection.QueryFirstOrDefault<Usuario>(sql, new { Email = email });
+    }
+
+    public Usuario? ObtenerPorId(int id)
+    {
+        using var dbContext = new DbContext();
+        var sql = @"
+            SELECT u.*, g.descripcion as GeneroDescripcion, c.nombre as CarreraNombre
+            FROM usuarios u
+            LEFT JOIN generos g ON u.genero_id = g.id
+            LEFT JOIN carreras c ON u.carrera_id = c.id
+            WHERE u.id = @Id";
+        return dbContext.Connection.QueryFirstOrDefault<Usuario>(sql, new { Id = id });
     }
 
     public List<Usuario> ObtenerPerfilesDisponibles(int usuarioId)
@@ -113,16 +130,42 @@ public class UsuarioRepository : Repository<Usuario>, IUsuarioRepository
     public bool RegistrarInteraccion(int usuarioOrigenId, int usuarioDestinoId, string tipo)
     {
         using var dbContext = new DbContext();
+
+        // Límite de likes diarios
+        if (tipo == "like")
+        {
+            var likesHoySql = @"
+                SELECT COUNT(*) 
+                FROM interacciones 
+                WHERE usuario_origen_id = @UsuarioOrigenId 
+                    AND tipo = 'like'
+                    AND DATE(fecha) = CURDATE()";
+
+            int likesHoy = dbContext.Connection.ExecuteScalar<int>(likesHoySql, new { UsuarioOrigenId = usuarioOrigenId });
+
+            int limiteLikesDiarios = 5; // Puedes ajustar este valor según tu necesidad
+            if (likesHoy >= limiteLikesDiarios)
+            {
+                // Ya alcanzó el límite de likes diarios
+                return false;
+            }
+        }
+
         var sql = @"
             INSERT INTO interacciones (usuario_origen_id, usuario_destino_id, tipo)
             VALUES (@UsuarioOrigenId, @UsuarioDestinoId, @Tipo)";
 
-        var affected = dbContext.Connection.Execute(sql, new 
-        { 
-            UsuarioOrigenId = usuarioOrigenId, 
-            UsuarioDestinoId = usuarioDestinoId, 
-            Tipo = tipo 
+        var affected = dbContext.Connection.Execute(sql, new
+        {
+            UsuarioOrigenId = usuarioOrigenId,
+            UsuarioDestinoId = usuarioDestinoId,
+            Tipo = tipo
         });
+
+        // Registrar log de interacción
+        dbContext.Connection.Execute(
+            "INSERT INTO log_interacciones (usuario_origen_id, usuario_destino_id, tipo) VALUES (@UsuarioOrigenId, @UsuarioDestinoId, @Tipo)",
+            new { UsuarioOrigenId = usuarioOrigenId, UsuarioDestinoId = usuarioDestinoId, Tipo = tipo });
 
         // Si es un like, verificar si hay match
         if (tipo == "like" && affected > 0)
@@ -134,10 +177,10 @@ public class UsuarioRepository : Repository<Usuario>, IUsuarioRepository
                 AND usuario_destino_id = @UsuarioOrigenId 
                 AND tipo = 'like'";
 
-            var hayMatch = dbContext.Connection.ExecuteScalar<int>(matchSql, new 
-            { 
-                UsuarioOrigenId = usuarioOrigenId, 
-                UsuarioDestinoId = usuarioDestinoId 
+            var hayMatch = dbContext.Connection.ExecuteScalar<int>(matchSql, new
+            {
+                UsuarioOrigenId = usuarioOrigenId,
+                UsuarioDestinoId = usuarioDestinoId
             }) > 0;
 
             if (hayMatch)
@@ -147,8 +190,8 @@ public class UsuarioRepository : Repository<Usuario>, IUsuarioRepository
                     INSERT INTO matches (usuario1_id, usuario2_id)
                     VALUES (@Usuario1Id, @Usuario2Id)";
 
-                dbContext.Connection.Execute(insertMatchSql, new 
-                { 
+                dbContext.Connection.Execute(insertMatchSql, new
+                {
                     Usuario1Id = Math.Min(usuarioOrigenId, usuarioDestinoId),
                     Usuario2Id = Math.Max(usuarioOrigenId, usuarioDestinoId)
                 });
@@ -187,4 +230,10 @@ public class UsuarioRepository : Repository<Usuario>, IUsuarioRepository
 
         return usuarios;
     }
-} 
+    public List<Carrera> ObtenerCarreras()
+    {
+        using var dbContext = new DbContext();
+        var sql = "SELECT id, nombre FROM carreras";
+        return dbContext.Connection.Query<Carrera>(sql).ToList();
+    }
+}
