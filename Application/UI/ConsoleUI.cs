@@ -140,8 +140,9 @@ namespace LoveCampus.Ui
                 Console.WriteLine($"Bienvenido, {_usuarioActual?.Nombre}!");
                 Console.WriteLine("1. Ver perfiles y dar Like/Dislike");
                 Console.WriteLine("2. Ver mis coincidencias (matches)");
-                Console.WriteLine("3. Ver estadísticas");
-                Console.WriteLine("4. Cerrar sesión");
+                Console.WriteLine("3. Gestionar mi información");
+                Console.WriteLine("4. Acceder a la tienda");
+                Console.WriteLine("5. Cerrar sesión");
                 Console.Write("Seleccione una opción: ");
                 var opcion = Console.ReadLine();
 
@@ -154,9 +155,12 @@ namespace LoveCampus.Ui
                         VerMatches();
                         break;
                     case "3":
-                        VerEstadisticas();
+                        GestionarInformacionUsuario();
                         break;
                     case "4":
+                        AccederTienda();
+                        break;
+                    case "5":
                         _usuarioActual = null;
                         return;
                     default:
@@ -164,6 +168,77 @@ namespace LoveCampus.Ui
                         Console.ReadKey();
                         break;
                 }
+            }
+        }
+
+        private void GestionarInformacionUsuario()
+        {
+            while (true)
+            {
+                Console.Clear();
+                Console.WriteLine("=== Gestión de Información ===");
+                Console.WriteLine("1. Editar nombre");
+                Console.WriteLine("2. Editar frase de perfil");
+                Console.WriteLine("3. Regresar");
+                Console.Write("Seleccione una opción: ");
+                var opcion = Console.ReadLine();
+
+                switch (opcion)
+                {
+                    case "1":
+                        Console.Write("Nuevo nombre: ");
+                        var nuevoNombre = Console.ReadLine();
+                        if (!string.IsNullOrWhiteSpace(nuevoNombre))
+                        {
+                            _usuarioActual!.Nombre = nuevoNombre;
+                            if (_usuarioRepo.Update(_usuarioActual))
+                                Console.WriteLine("Nombre actualizado correctamente.");
+                            else
+                                Console.WriteLine("Error al actualizar el nombre.");
+                        }
+                        break;
+                    case "2":
+                        Console.Write("Nueva frase de perfil: ");
+                        var nuevaFrase = Console.ReadLine();
+                        _usuarioActual!.FrasePerfil = nuevaFrase;
+                        if (_usuarioRepo.Update(_usuarioActual))
+                            Console.WriteLine("Frase de perfil actualizada correctamente.");
+                        else
+                            Console.WriteLine("Error al actualizar la frase de perfil.");
+                        break;
+                    case "3":
+                        return;
+                    default:
+                        Console.WriteLine("Opción inválida.");
+                        break;
+                }
+                Console.WriteLine("Presione una tecla para continuar...");
+                Console.ReadKey();
+            }
+        }
+
+        private void AccederTienda()
+        {
+            while (true)
+            {
+                Console.Clear();
+                Console.WriteLine("=== Tienda ===");
+                var productos = _usuarioRepo.ObtenerProductosTienda();
+                foreach (var producto in productos)
+                {
+                    Console.WriteLine($"{producto.Id}. {producto.Nombre} - {producto.PrecioCapcoins} Capcoins");
+                }
+                Console.WriteLine("0. Regresar");
+                Console.Write("Seleccione un producto para comprar: ");
+                if (!int.TryParse(Console.ReadLine(), out int productoId) || productoId == 0)
+                    return;
+
+                if (_usuarioRepo.RealizarCompra(_usuarioActual!.Id, productoId))
+                    Console.WriteLine("Compra realizada con éxito.");
+                else
+                    Console.WriteLine("No se pudo realizar la compra. Verifique sus capcoins.");
+                Console.WriteLine("Presione una tecla para continuar...");
+                Console.ReadKey();
             }
         }
 
