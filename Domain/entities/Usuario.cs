@@ -5,6 +5,7 @@ public class Usuario
     public int Id { get; set; }
     public string Nombre { get; set; } = string.Empty;
     public int Edad { get; set; }
+    public int Capcoins { get; set; }
     public int GeneroId { get; set; }
     public int CarreraId { get; set; }
     public string Email { get; set; } = string.Empty;
