@@ -1,42 +1,37 @@
-﻿using LoveCampus.Ui;
+using System;
+using CampusLove.App.UI;
+using CampusLove.Infrastructure.Config;
 
-class Program
+namespace CampusLove
 {
-    static void Main(string[] args)
+    class Program
     {
-        var authUI = new AuthUI();
-        while (true)
+        static void Main(string[] args)
         {
-            Console.Clear();
-            Console.WriteLine("=== LoveCampus ===");
-            Console.WriteLine("1. Registrarse como nuevo usuario");
-            Console.WriteLine("2. Iniciar sesión");
-            Console.WriteLine("3. Salir");
-            Console.Write("Seleccione una opción: ");
-            var opcion = Console.ReadLine();
-
-            switch (opcion)
+            // Set up database connection
+            try
             {
-                case "1":
-                    var usuario = authUI.IniciarSesion();
-                    if (usuario != null)
-                    {
-                        if (usuario.Rol == "admin")
-                            new AdminUI().MenuAdministrador();
-                        else
-                            new UsuarioUI(usuario).MenuUsuario();
-                    }
-                    break;
-                case "2":
-                    authUI.RegistrarUsuario();
-                    break;
-                case "3":
-                    return;
-                default:
-                    Console.WriteLine("Opción inválida. Presione una tecla para continuar...");
-                    Console.ReadKey();
-                    break;
+                DatabaseConfig.Initialize();
+                Console.WriteLine("Database connection established successfully.");
             }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Failed to connect to database: {ex.Message}");
+                Console.ResetColor();
+                Console.WriteLine("Press any key to exit...");
+                Console.ReadKey();
+                return;
+            }
+
+            Console.Title = "Campus Love...Where is Love";
+            
+            // Display welcome screen
+            ApplicationUI.DisplayWelcomeScreen();
+            
+            // Initialize main menu
+            MainMenu mainMenu = new MainMenu();
+            mainMenu.Show();
         }
     }
 }

@@ -29,7 +29,7 @@ CREATE TABLE usuarios (
     genero_id INT NOT NULL,
     carrera_id INT NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
-    password VARCHAR(50) NOT NULL,
+    password VARCHAR(100) NOT NULL,
     frase_perfil TEXT,
     creditos_disponibles INT DEFAULT 5,
     capcoins INT DEFAULT 0,
@@ -96,7 +96,9 @@ CREATE INDEX idx_matches_usuarios ON matches(usuario1_id, usuario2_id);
 -- Insertar datos iniciales
 INSERT INTO generos (descripcion) VALUES 
 ('Masculino'),
-('Femenino');
+('Femenino'),
+('No binario'),
+('Prefiero no decir');
 
 -- Insertar algunas carreras
 INSERT INTO carreras (nombre) VALUES 
@@ -105,7 +107,11 @@ INSERT INTO carreras (nombre) VALUES
 ('Administración de Empresas'),
 ('Derecho'),
 ('Medicina'),
-('Arquitectura');
+('Arquitectura'),
+('Diseño Gráfico'),
+('Ingeniería Civil'),
+('Contabilidad'),
+('Marketing');
 
 -- Insertar algunos intereses
 INSERT INTO intereses (nombre) VALUES 
@@ -114,11 +120,36 @@ INSERT INTO intereses (nombre) VALUES
 ('Lectura'),
 ('Viajar'),
 ('Cine'),
-('Tecnología');
+('Tecnología'),
+('Arte'),
+('Fotografía'),
+('Cocina'),
+('Videojuegos'),
+('Naturaleza'),
+('Fitness'),
+('Animales'),
+('Política'),
+('Moda');
 
 -- Insertar algunos productos en la tienda
 INSERT INTO tienda (nombre, descripcion, precio_capcoins, tipo, cantidad) VALUES
-('Paquete de 5 Tokens', '5 tokens para ver perfiles', 100, 'token', 5),
-('Paquete de 10 Tokens', '10 tokens para ver perfiles', 180, 'token', 10),
+('Paquete de 5 Tokens', '5 tokens para dar likes', 100, 'token', 5),
+('Paquete de 10 Tokens', '10 tokens para dar likes', 180, 'token', 10),
+('Paquete de 20 Tokens', '20 tokens para dar likes', 300, 'token', 20),
 ('Paquete de 5 Likes', '5 likes adicionales', 50, 'like', 5),
-('Paquete de 10 Likes', '10 likes adicionales', 90, 'like', 10);
+('Paquete de 10 Likes', '10 likes adicionales', 90, 'like', 10),
+('Paquete de 20 Likes', '20 likes adicionales', 150, 'like', 20);
+
+-- Insertar usuarios demo
+INSERT INTO usuarios (nombre, edad, genero_id, carrera_id, email, password, frase_perfil, creditos_disponibles, capcoins) VALUES
+('Juan Pérez', 22, 1, 1, 'juan@example.com', 'password123', 'Me gusta programar y escuchar música', 5, 100),
+('María López', 21, 2, 2, 'maria@example.com', 'password123', 'Me encanta leer y el cine', 5, 100),
+('Carlos Rodríguez', 23, 1, 3, 'carlos@example.com', 'password123', 'Apasionado del deporte y los videojuegos', 5, 100),
+('Ana García', 20, 2, 4, 'ana@example.com', 'password123', 'Me gusta viajar y conocer nuevas culturas', 5, 100);
+
+-- Asignar intereses a usuarios
+INSERT INTO usuario_intereses (usuario_id, interes_id) VALUES
+(1, 1), (1, 2), (1, 6),
+(2, 3), (2, 4), (2, 5),
+(3, 1), (3, 6), (3, 10),
+(4, 2), (4, 4), (4, 7);

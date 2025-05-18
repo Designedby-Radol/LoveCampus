@@ -1,12 +1,11 @@
-namespace LoveCampus.Domain.Interfaces;
-
-public interface IRepository<T> where T : class
+namespace CampusLove.Domain.Interfaces
 {
-    Task<IEnumerable<T>> GetAllAsync();
-    Task<T?> GetByIdAsync(object id);
-    Task<bool> AddAsync(T entity);
-    Task<bool> UpdateAsync(T entity);
-    Task<bool> DeleteAsync(object id);
-    Task<int> CountAsync();
-    Task<bool> ExistsAsync(object id);
-} 
+    public interface IRepository<T> where T : class
+    {
+        T GetById(int id);
+        IEnumerable<T> GetAll();
+        void Add(T entity);
+        void Update(T entity);
+        void Delete(int id);
+    }
+}
