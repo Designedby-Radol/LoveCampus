@@ -2,7 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoveCampus", "LoveCampus.csproj", "{9C0BE560-5C22-8685-A46A-59163F1D44BA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CampusLove", "CampusLove.csproj", "{88FC198A-15ED-EA79-2140-BC88C1846D2A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -10,15 +10,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{9C0BE560-5C22-8685-A46A-59163F1D44BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9C0BE560-5C22-8685-A46A-59163F1D44BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9C0BE560-5C22-8685-A46A-59163F1D44BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9C0BE560-5C22-8685-A46A-59163F1D44BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88FC198A-15ED-EA79-2140-BC88C1846D2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88FC198A-15ED-EA79-2140-BC88C1846D2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88FC198A-15ED-EA79-2140-BC88C1846D2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88FC198A-15ED-EA79-2140-BC88C1846D2A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {7684A9BF-7010-4AE5-A2EF-23A905E3184A}
+		SolutionGuid = {6AA59BFC-DEF7-4429-9E45-8A16069A2004}
 	EndGlobalSection
 EndGlobal
